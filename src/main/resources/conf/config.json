@@ -1,0 +1,4 @@
+{
+  "http.port": 7070,
+  "jsonFile": "aaservices.json"
+}
