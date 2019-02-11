@@ -29,29 +29,6 @@ public class ServiceRegistry extends AbstractVerticle {
     }
   }
 
-  private void rebuildIndexes() {
-    HashMap<Integer, Service> newRegistry = new HashMap<>();
-
-    Iterator<Integer> iterator = IntStream.range(0, registry.size()).boxed().iterator();
-
-    registry.values()
-      .forEach(service -> newRegistry.put(iterator.next(), service));
-
-    this.registry = newRegistry;
-  }
-
-  private void flushToDisc() {
-    List<Service> services = new ArrayList<>(registry.values());
-    ServiceMessage message = new ServiceMessage(Operation.FLUSH, services);
-    vertx.eventBus().send(App.ADDRESS, message, reply -> {
-      if (reply.succeeded()) {
-        System.out.println(reply.result().body().toString());
-      } else {
-        System.out.println(reply.cause().getCause());
-      }
-    });
-  }
-
   @Override
   public void start(Future<Void> future) {
     vertx.eventBus().consumer(ADDRESS, message -> {
@@ -75,6 +52,29 @@ public class ServiceRegistry extends AbstractVerticle {
           break;
         default:
           break;
+      }
+    });
+  }
+
+  private void rebuildIndexes() {
+    HashMap<Integer, Service> newRegistry = new HashMap<>();
+
+    Iterator<Integer> iterator = IntStream.range(0, registry.size()).boxed().iterator();
+
+    registry.values()
+      .forEach(service -> newRegistry.put(iterator.next(), service));
+
+    this.registry = newRegistry;
+  }
+
+  private void flushToDisc() {
+    List<Service> services = new ArrayList<>(registry.values());
+    ServiceMessage message = new ServiceMessage(Operation.FLUSH, services);
+    vertx.eventBus().send(App.ADDRESS, message, reply -> {
+      if (reply.succeeded()) {
+        System.out.println(reply.result().body().toString());
+      } else {
+        System.out.println(reply.cause().getCause());
       }
     });
   }
