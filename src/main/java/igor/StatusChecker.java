@@ -6,7 +6,6 @@ import igor.util.ServiceMessage;
 import igor.util.StatusCode;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
-import io.vertx.core.Vertx;
 import io.vertx.ext.web.client.WebClient;
 
 import java.util.List;
@@ -20,7 +19,7 @@ public class StatusChecker extends AbstractVerticle {
   public void start(Future<Void> future) {
     this.client = WebClient.create(vertx);
 
-    vertx.setPeriodic(1000 * 600, handle -> {
+    vertx.setPeriodic(1000 * 60, handle -> {
       runChecks();
     });
   }

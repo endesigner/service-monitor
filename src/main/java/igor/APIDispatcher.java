@@ -125,6 +125,7 @@ public class APIDispatcher extends AbstractVerticle {
       ServiceMessage serviceMessage = (ServiceMessage) reply.result().body();
 
       if (reply.succeeded()) {
+        System.out.println(serviceMessage.getStatusCode());
         response(routingContext, serviceMessage.getStatusCode());
       } else {
         routingContext.fail(reply.cause());

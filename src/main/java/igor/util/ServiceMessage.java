@@ -82,6 +82,14 @@ public class ServiceMessage {
     );
   }
 
+  public ServiceMessage(StatusCode statusCode, Integer[] serviceIds) {
+    this(
+      null
+      , statusCode
+      , Arrays.asList(serviceIds)
+      , null
+    );
+  }
 
   public ServiceMessage(Operation operation, Integer[] serviceIds) {
     this(

@@ -119,15 +119,15 @@ public class ServiceRegistry extends AbstractVerticle {
 
   private void deleteAndRespond(Message message, List<Integer> serviceIds) {
     serviceIds.stream().forEach(serviceId -> {
-      if (!registry.containsKey(serviceId)) {
-        return;
-      }
+      if (!registry.containsKey(serviceId)) return;
       registry.remove(serviceId);
     });
 
     flushToDisc();
     rebuildIndexes();
-    message.reply(new ServiceMessage(StatusCode.NO_CONTENT, 0));
+
+    Integer[] ids = serviceIds.toArray(new Integer[serviceIds.size()]);
+    message.reply(new ServiceMessage(StatusCode.OK, ids));
   }
 
   private void updateAndRespond(Message message, Integer serviceId, Service service) {
