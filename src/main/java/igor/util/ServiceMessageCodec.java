@@ -5,18 +5,20 @@ import io.vertx.core.buffer.Buffer;
 import io.vertx.core.eventbus.MessageCodec;
 import io.vertx.core.json.JsonObject;
 
+import java.util.List;
+
 public class ServiceMessageCodec implements MessageCodec<ServiceMessage, ServiceMessage> {
   private static final String STATUS_CODE = "statusCode";
-  private static final String SERVICE = "service";
-  private static final String SERVICE_ID = "serviceId";
+  private static final String SERVICES = "service";
+  private static final String SERVICE_IDS = "serviceIds";
   private static final String OPERATION = "operation";
 
   @Override
   public void encodeToWire(Buffer buffer, ServiceMessage serviceMessage) {
     JsonObject jsonToEncode = new JsonObject();
     jsonToEncode.put(STATUS_CODE, serviceMessage.getStatusCode());
-    jsonToEncode.put(SERVICE_ID, serviceMessage.getServiceId());
-    jsonToEncode.put(SERVICE, serviceMessage.getServices());
+    jsonToEncode.put(SERVICE_IDS, serviceMessage.getServiceIds());
+    jsonToEncode.put(SERVICES, serviceMessage.getServices());
     jsonToEncode.put(OPERATION, serviceMessage.getOperation());
     String jsonToString = jsonToEncode.encode();
 
@@ -41,12 +43,12 @@ public class ServiceMessageCodec implements MessageCodec<ServiceMessage, Service
 
     // Get fields
     StatusCode statusCode = StatusCode.valueOf(contentJson.getString(STATUS_CODE));
-    Integer serviceId = contentJson.getInteger(SERVICE_ID);
-    Service service = contentJson.getJsonObject(SERVICE).mapTo(Service.class);
+    List<Integer> serviceIds = (List<Integer>) contentJson.getJsonArray(SERVICE_IDS).getList();
+    List<Service> services = (List<Service>) contentJson.getJsonArray(SERVICES).getList();
     Operation operation = Operation.valueOf(contentJson.getString(OPERATION));
 
     // We can finally create custom message object
-    return new ServiceMessage(operation, statusCode, serviceId, service);
+    return new ServiceMessage(operation, statusCode, serviceIds, services);
   }
 
   @Override

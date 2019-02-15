@@ -20,7 +20,7 @@ public class StatusChecker extends AbstractVerticle {
   public void start(Future<Void> future) {
     this.client = WebClient.create(vertx);
 
-    vertx.setPeriodic(5000, handle -> {
+    vertx.setPeriodic(1000 * 600, handle -> {
       runChecks();
     });
   }

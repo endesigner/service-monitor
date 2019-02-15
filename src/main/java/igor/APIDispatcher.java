@@ -2,17 +2,20 @@ package igor;
 
 import igor.model.Service;
 import igor.util.Operation;
-import igor.util.StatusCode;
 import igor.util.ServiceMessage;
+import igor.util.StatusCode;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
+import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.Json;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.BodyHandler;
+import io.vertx.ext.web.handler.CorsHandler;
 
-import java.util.List;
+import java.util.*;
 
 public class APIDispatcher extends AbstractVerticle {
   private Integer port;
@@ -37,10 +40,31 @@ public class APIDispatcher extends AbstractVerticle {
       .handler(this::getServices);
     router.post("/service")
       .handler(this::addService);
+    router.delete("/service")
+      .handler(this::deleteServices);
     router.delete("/service/:id")
       .handler(this::deleteService);
     router.put("/service/:id")
       .handler(this::updateService);
+
+    Set<String> allowedHeaders = new HashSet<>();
+    allowedHeaders.add("x-requested-with");
+    allowedHeaders.add("Access-Control-Allow-Origin");
+    allowedHeaders.add("origin");
+    allowedHeaders.add("Content-Type");
+    allowedHeaders.add("accept");
+
+    Set<HttpMethod> allowedMethods = new HashSet<>();
+    allowedMethods.add(HttpMethod.GET);
+    allowedMethods.add(HttpMethod.POST);
+    allowedMethods.add(HttpMethod.DELETE);
+    allowedMethods.add(HttpMethod.OPTIONS);
+    allowedMethods.add(HttpMethod.PUT);
+
+    router.route().handler(CorsHandler.create("*")
+      .allowedHeaders(allowedHeaders)
+      .allowedMethods(allowedMethods));
+
 
     vertx.createHttpServer()
       .requestHandler(router)
@@ -90,6 +114,24 @@ public class APIDispatcher extends AbstractVerticle {
     });
   }
 
+  private void deleteServices(RoutingContext routingContext) {
+    JsonArray body = routingContext.getBodyAsJsonArray();
+    List<Integer> _ids = body.getList();
+    Integer[] ids = _ids.toArray(new Integer[_ids.size()]);
+
+    ServiceMessage message = new ServiceMessage(Operation.DELETE, ids);
+
+    vertx.eventBus().send(ServiceRegistry.ADDRESS, message, reply -> {
+      ServiceMessage serviceMessage = (ServiceMessage) reply.result().body();
+
+      if (reply.succeeded()) {
+        response(routingContext, serviceMessage.getStatusCode());
+      } else {
+        routingContext.fail(reply.cause());
+      }
+    });
+  }
+
   private void addService(RoutingContext routingContext) {
     String body = routingContext.getBodyAsString();
     Service service = new JsonObject(body).mapTo(Service.class);
@@ -125,6 +167,7 @@ public class APIDispatcher extends AbstractVerticle {
   }
 
   private void listServices(RoutingContext routingContext) {
+    System.out.println("LIST");
     vertx.eventBus().send(ServiceRegistry.ADDRESS, new ServiceMessage(Operation.LIST), reply -> {
       ServiceMessage message = (ServiceMessage) reply.result().body();
 
@@ -158,9 +201,15 @@ public class APIDispatcher extends AbstractVerticle {
     response(routingContext, statusCode, payload.encodePrettily());
   }
 
+  private void response(RoutingContext routingContext, StatusCode statusCode, JsonArray payload) {
+    response(routingContext, statusCode, payload.encodePrettily());
+  }
+
   private void response(RoutingContext routingContext, StatusCode statusCode, String payload) {
     routingContext.response()
       .putHeader("content-type", "application/json")
+      .putHeader("Access-Control-Allow-Origin", "*")
+      .setChunked(true)
       .setStatusCode(statusCode.getValue())
       .end(payload);
   }

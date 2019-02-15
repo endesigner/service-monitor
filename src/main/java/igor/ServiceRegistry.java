@@ -39,16 +39,21 @@ public class ServiceRegistry extends AbstractVerticle {
           listAndRespond(message);
           break;
         case GET:
-          getAndRespond(message, serviceMessage.getServiceId());
+          getAndRespond(message, serviceMessage.getServiceIds().get(0));
           break;
         case ADD:
           addAndRespond(message, serviceMessage.getServices().get(0));
           break;
         case DELETE:
-          deleteAndRespond(message, serviceMessage.getServiceId());
+          List<Integer> serviceIds = serviceMessage.getServiceIds();
+          if (serviceIds.size() > 1) {
+            deleteAndRespond(message, serviceIds);
+          } else {
+            deleteAndRespond(message, serviceIds.get(0));
+          }
           break;
         case PUT:
-          updateAndRespond(message, serviceMessage.getServiceId(), serviceMessage.getServices().get(0));
+          updateAndRespond(message, serviceMessage.getServiceIds().get(0), serviceMessage.getServices().get(0));
           break;
         default:
           break;
@@ -84,7 +89,7 @@ public class ServiceRegistry extends AbstractVerticle {
     message.reply(new ServiceMessage(StatusCode.OK, registryList));
   }
 
-  private void getAndRespond(Message message, int serviceId) {
+  private void getAndRespond(Message message, Integer serviceId) {
     if (!registry.containsKey(serviceId)) {
       message.reply(new ServiceMessage(StatusCode.NOT_FOUND, serviceId));
       return;
@@ -100,7 +105,7 @@ public class ServiceRegistry extends AbstractVerticle {
     message.reply(new ServiceMessage(StatusCode.CREATED, id, service));
   }
 
-  private void deleteAndRespond(Message message, int serviceId) {
+  private void deleteAndRespond(Message message, Integer serviceId) {
     if (!registry.containsKey(serviceId)) {
       message.reply(new ServiceMessage(StatusCode.NOT_FOUND, serviceId));
       return;
@@ -112,7 +117,20 @@ public class ServiceRegistry extends AbstractVerticle {
     message.reply(new ServiceMessage(StatusCode.NO_CONTENT, serviceId));
   }
 
-  private void updateAndRespond(Message message, int serviceId, Service service) {
+  private void deleteAndRespond(Message message, List<Integer> serviceIds) {
+    serviceIds.stream().forEach(serviceId -> {
+      if (!registry.containsKey(serviceId)) {
+        return;
+      }
+      registry.remove(serviceId);
+    });
+
+    flushToDisc();
+    rebuildIndexes();
+    message.reply(new ServiceMessage(StatusCode.NO_CONTENT, 0));
+  }
+
+  private void updateAndRespond(Message message, Integer serviceId, Service service) {
     // This is a naive implementation on an update mechanism
     // Update may happen on a service with an index that has been deleted before the update is complete
 

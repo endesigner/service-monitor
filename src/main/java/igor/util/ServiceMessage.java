@@ -3,67 +3,107 @@ package igor.util;
 import igor.model.Service;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class ServiceMessage {
   private final Operation operation;
   private final StatusCode statusCode;
-  private final Integer serviceId;
+  private final List<Integer> serviceIds;
   private final List<Service> services;
 
   public ServiceMessage(StatusCode statusCode, List<Service> serviceList) {
-    this(null, statusCode, null, serviceList);
+    this(
+      null
+      , statusCode
+      , null
+      , serviceList
+    );
   }
 
-  public ServiceMessage(StatusCode statusCode, Integer id, Service service) {
-    this(null, statusCode, id, new ArrayList<Service>() {{
-      add(service);
-    }});
+  public ServiceMessage(StatusCode statusCode, Integer serviceId, Service service) {
+    this(
+      null
+      , statusCode
+      , new ArrayList<Integer>() {{ add(serviceId); }}
+      , new ArrayList<Service>() {{ add(service); }}
+      );
   }
 
   public ServiceMessage(Operation operation, Service service) {
-    this(operation, null, null, new ArrayList<Service>() {{
-      add(service);
-    }});
+    this(
+      operation
+      , null
+      , null
+      , new ArrayList<Service>() {{ add(service); }}
+    );
   }
 
   public ServiceMessage(Operation operation) {
-    this(operation, null, null, new ArrayList<Service>() {{
-      add(null);
-    }});
+    this(
+      operation
+      , null
+      , null
+      , new ArrayList<Service>() {{ add(null); }}
+      );
   }
 
   public ServiceMessage(Operation operation, Integer serviceId) {
-    this(operation, null, serviceId, new ArrayList<Service>() {{
-      add(null);
-    }});
+    this(operation
+      , null
+      , new ArrayList<Integer>() {{ add(serviceId); }}
+      , new ArrayList<Service>() {{ add(null); }}
+      );
   }
 
   public ServiceMessage(StatusCode statusCode, int serviceId) {
-    this(null, statusCode, serviceId, new ArrayList<Service>() {{
-      add(null);
-    }});
+    this(
+      null
+      , statusCode
+      , new ArrayList<Integer>() {{ add(serviceId); }}
+      , new ArrayList<Service>() {{ add(null); }}
+      );
   }
 
   public ServiceMessage(Operation operation, int serviceId, Service service) {
-    this(operation, null, serviceId, new ArrayList<Service>() {{
-      add(service);
-    }});
+    this(operation
+      , null
+      , new ArrayList<Integer>() {{ add(serviceId); }}
+      , new ArrayList<Service>() {{ add(service); }}
+      );
   }
 
   public ServiceMessage(Operation operation, List<Service> services) {
-    this(operation, null, null, services);
+    this(
+      operation
+      , null
+      , null
+      , services
+    );
+  }
+
+
+  public ServiceMessage(Operation operation, Integer[] serviceIds) {
+    this(
+      operation
+      , null
+      , Arrays.asList(serviceIds)
+      , null
+    );
   }
 
   public ServiceMessage(Operation operation, StatusCode statusCode, Integer serviceId, Service service) {
-    this(operation, statusCode, serviceId, new ArrayList<Service>() {{
-      add(service);
-    }});
+    this(
+      operation
+      , statusCode
+      , new ArrayList<Integer>() {{ add(serviceId); }}
+      , new ArrayList<Service>() {{ add(service); }}
+      );
   }
 
-  public ServiceMessage(Operation operation, StatusCode statusCode, Integer serviceId, List<Service> services) {
+  public ServiceMessage(Operation operation, StatusCode statusCode, List<Integer> serviceIds, List<Service> services) {
     this.statusCode = statusCode;
-    this.serviceId = serviceId;
+    this.serviceIds = serviceIds;
     this.services = services;
     this.operation = operation;
   }
@@ -72,8 +112,8 @@ public class ServiceMessage {
     return statusCode;
   }
 
-  public Integer getServiceId() {
-    return serviceId;
+  public List<Integer> getServiceIds() {
+    return serviceIds;
   }
 
   public List<Service> getServices() {
