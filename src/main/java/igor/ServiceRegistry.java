@@ -9,23 +9,23 @@ import io.vertx.core.Future;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.json.JsonArray;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.stream.IntStream;
+import java.util.*;
+import java.util.UUID;
+
 
 public class ServiceRegistry extends AbstractVerticle {
 
   public static final String ADDRESS = "service-registry";
 
-  private HashMap<Integer, Service> registry;
+  private HashMap<UUID, Service> registry;
 
   public ServiceRegistry(JsonArray jsonArray) {
     this.registry = new HashMap<>();
 
+    Service service;
     for (var i = 0; i < jsonArray.size(); i++) {
-      registry.put(i, jsonArray.getJsonObject(i).mapTo(Service.class));
+      service = jsonArray.getJsonObject(i).mapTo(Service.class);
+      registry.put(service.getUUID(), service);
     }
   }
 
@@ -45,31 +45,15 @@ public class ServiceRegistry extends AbstractVerticle {
           addAndRespond(message, serviceMessage.getServices().get(0));
           break;
         case DELETE:
-          List<Integer> serviceIds = serviceMessage.getServiceIds();
-          if (serviceIds.size() > 1) {
-            deleteAndRespond(message, serviceIds);
-          } else {
-            deleteAndRespond(message, serviceIds.get(0));
-          }
+          deleteAndRespond(message, serviceMessage.getServiceIds());
           break;
         case PUT:
-          updateAndRespond(message, serviceMessage.getServiceIds().get(0), serviceMessage.getServices().get(0));
+          updateAndRespond(message, serviceMessage.getServices().get(0));
           break;
         default:
           break;
       }
     });
-  }
-
-  private void rebuildIndexes() {
-    HashMap<Integer, Service> newRegistry = new HashMap<>();
-
-    Iterator<Integer> iterator = IntStream.range(0, registry.size()).boxed().iterator();
-
-    registry.values()
-      .forEach(service -> newRegistry.put(iterator.next(), service));
-
-    this.registry = newRegistry;
   }
 
   private void flushToDisc() {
@@ -89,7 +73,7 @@ public class ServiceRegistry extends AbstractVerticle {
     message.reply(new ServiceMessage(StatusCode.OK, registryList));
   }
 
-  private void getAndRespond(Message message, Integer serviceId) {
+  private void getAndRespond(Message message, UUID serviceId) {
     if (!registry.containsKey(serviceId)) {
       message.reply(new ServiceMessage(StatusCode.NOT_FOUND, serviceId));
       return;
@@ -99,48 +83,38 @@ public class ServiceRegistry extends AbstractVerticle {
   }
 
   private void addAndRespond(Message message, Service service) {
-    Integer id = registry.size();
+    UUID id = service.getUUID();
     registry.put(id, service);
     flushToDisc();
     message.reply(new ServiceMessage(StatusCode.CREATED, id, service));
   }
 
-  private void deleteAndRespond(Message message, Integer serviceId) {
-    if (!registry.containsKey(serviceId)) {
-      message.reply(new ServiceMessage(StatusCode.NOT_FOUND, serviceId));
+  private void deleteAndRespond(Message message, List<UUID> serviceIds) {
+    if (serviceIds.size() == 0) {
+      message.reply(new ServiceMessage(StatusCode.NOT_FOUND));
       return;
     }
 
-    registry.remove(serviceId);
-    flushToDisc();
-    rebuildIndexes();
-    message.reply(new ServiceMessage(StatusCode.NO_CONTENT, serviceId));
-  }
-
-  private void deleteAndRespond(Message message, List<Integer> serviceIds) {
     serviceIds.stream().forEach(serviceId -> {
       if (!registry.containsKey(serviceId)) return;
       registry.remove(serviceId);
     });
 
     flushToDisc();
-    rebuildIndexes();
 
-    Integer[] ids = serviceIds.toArray(new Integer[serviceIds.size()]);
+    UUID[] ids = serviceIds.toArray(new UUID[serviceIds.size()]);
     message.reply(new ServiceMessage(StatusCode.OK, ids));
   }
 
-  private void updateAndRespond(Message message, Integer serviceId, Service service) {
-    // This is a naive implementation on an update mechanism
-    // Update may happen on a service with an index that has been deleted before the update is complete
-
-    if (!registry.containsKey(serviceId)) {
-      message.reply(new ServiceMessage(StatusCode.NOT_FOUND, serviceId));
+  private void updateAndRespond(Message message, Service service) {
+    UUID id = service.getUUID();
+    if (!registry.containsKey(id)) {
+      message.reply(new ServiceMessage(StatusCode.NOT_FOUND, id));
       return;
     }
 
-    registry.put(serviceId, service);
+    registry.put(service.getUUID(), service);
     flushToDisc();
-    message.reply(new ServiceMessage(StatusCode.OK, serviceId, service));
+    message.reply(new ServiceMessage(StatusCode.OK, id, service));
   }
 }

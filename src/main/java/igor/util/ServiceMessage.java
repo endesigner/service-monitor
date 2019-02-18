@@ -5,11 +5,12 @@ import igor.model.Service;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
 
 public class ServiceMessage {
   private final Operation operation;
   private final StatusCode statusCode;
-  private final List<Integer> serviceIds;
+  private final List<UUID> serviceIds;
   private final List<Service> services;
 
   public ServiceMessage(StatusCode statusCode, List<Service> serviceList) {
@@ -21,11 +22,11 @@ public class ServiceMessage {
     );
   }
 
-  public ServiceMessage(StatusCode statusCode, Integer serviceId, Service service) {
+  public ServiceMessage(StatusCode statusCode, UUID serviceId, Service service) {
     this(
       null
       , statusCode
-      , new ArrayList<Integer>() {{ add(serviceId); }}
+      , new ArrayList<UUID>() {{ add(serviceId); }}
       , new ArrayList<Service>() {{ add(service); }}
       );
   }
@@ -39,6 +40,15 @@ public class ServiceMessage {
     );
   }
 
+  public ServiceMessage(StatusCode statusCode) {
+    this(
+      null
+      , statusCode
+      , null
+      , new ArrayList<Service>() {{ add(null); }}
+    );
+  }
+
   public ServiceMessage(Operation operation) {
     this(
       operation
@@ -48,27 +58,27 @@ public class ServiceMessage {
       );
   }
 
-  public ServiceMessage(Operation operation, Integer serviceId) {
+  public ServiceMessage(Operation operation, UUID serviceId) {
     this(operation
       , null
-      , new ArrayList<Integer>() {{ add(serviceId); }}
+      , new ArrayList<UUID>() {{ add(serviceId); }}
       , new ArrayList<Service>() {{ add(null); }}
       );
   }
 
-  public ServiceMessage(StatusCode statusCode, int serviceId) {
+  public ServiceMessage(StatusCode statusCode, UUID serviceId) {
     this(
       null
       , statusCode
-      , new ArrayList<Integer>() {{ add(serviceId); }}
+      , new ArrayList<UUID>() {{ add(serviceId); }}
       , new ArrayList<Service>() {{ add(null); }}
       );
   }
 
-  public ServiceMessage(Operation operation, int serviceId, Service service) {
+  public ServiceMessage(Operation operation, UUID serviceId, Service service) {
     this(operation
       , null
-      , new ArrayList<Integer>() {{ add(serviceId); }}
+      , new ArrayList<UUID>() {{ add(serviceId); }}
       , new ArrayList<Service>() {{ add(service); }}
       );
   }
@@ -82,7 +92,7 @@ public class ServiceMessage {
     );
   }
 
-  public ServiceMessage(StatusCode statusCode, Integer[] serviceIds) {
+  public ServiceMessage(StatusCode statusCode, UUID[] serviceIds) {
     this(
       null
       , statusCode
@@ -91,7 +101,7 @@ public class ServiceMessage {
     );
   }
 
-  public ServiceMessage(Operation operation, Integer[] serviceIds) {
+  public ServiceMessage(Operation operation, UUID[] serviceIds) {
     this(
       operation
       , null
@@ -100,16 +110,16 @@ public class ServiceMessage {
     );
   }
 
-  public ServiceMessage(Operation operation, StatusCode statusCode, Integer serviceId, Service service) {
+  public ServiceMessage(Operation operation, StatusCode statusCode, UUID serviceId, Service service) {
     this(
       operation
       , statusCode
-      , new ArrayList<Integer>() {{ add(serviceId); }}
+      , new ArrayList<UUID>() {{ add(serviceId); }}
       , new ArrayList<Service>() {{ add(service); }}
       );
   }
 
-  public ServiceMessage(Operation operation, StatusCode statusCode, List<Integer> serviceIds, List<Service> services) {
+  public ServiceMessage(Operation operation, StatusCode statusCode, List<UUID> serviceIds, List<Service> services) {
     this.statusCode = statusCode;
     this.serviceIds = serviceIds;
     this.services = services;
@@ -120,7 +130,7 @@ public class ServiceMessage {
     return statusCode;
   }
 
-  public List<Integer> getServiceIds() {
+  public List<UUID> getServiceIds() {
     return serviceIds;
   }
 

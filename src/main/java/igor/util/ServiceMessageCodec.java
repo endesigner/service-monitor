@@ -6,6 +6,7 @@ import io.vertx.core.eventbus.MessageCodec;
 import io.vertx.core.json.JsonObject;
 
 import java.util.List;
+import java.util.UUID;
 
 public class ServiceMessageCodec implements MessageCodec<ServiceMessage, ServiceMessage> {
   private static final String STATUS_CODE = "statusCode";
@@ -43,7 +44,7 @@ public class ServiceMessageCodec implements MessageCodec<ServiceMessage, Service
 
     // Get fields
     StatusCode statusCode = StatusCode.valueOf(contentJson.getString(STATUS_CODE));
-    List<Integer> serviceIds = (List<Integer>) contentJson.getJsonArray(SERVICE_IDS).getList();
+    List<UUID> serviceIds = (List<UUID>) contentJson.getJsonArray(SERVICE_IDS).getList();
     List<Service> services = (List<Service>) contentJson.getJsonArray(SERVICES).getList();
     Operation operation = Operation.valueOf(contentJson.getString(OPERATION));
 

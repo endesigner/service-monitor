@@ -8,11 +8,14 @@ import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import io.vertx.ext.web.client.WebClient;
 
+import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 
 public class StatusChecker extends AbstractVerticle {
 
   public static final String ADDRESS = "status-checker";
+
   private WebClient client;
 
   @Override
@@ -29,26 +32,27 @@ public class StatusChecker extends AbstractVerticle {
       if (reply.succeeded()) {
         ServiceMessage message = (ServiceMessage) reply.result().body();
         List<Service> services = message.getServices();
-        for (var i = 0; i < services.size(); i++) {
-          check(i, services.get(i));
-        }
+        services.stream()
+          .forEach(service -> check(service.getUUID(), service));
       } else {
         throw new RuntimeException("FAILED TO GET A LIST OF SERVICES FROM " + ServiceRegistry.ADDRESS);
       }
     });
   }
 
-  private void check(int id, Service service) {
+  private void check(UUID id, Service service) {
     String url = service.getUrl();
 
     client.get(80, url, "/").send(response -> {
       if (response.succeeded() && response.result().statusCode() == StatusCode.OK.getValue()) {
         System.out.println(url + " " + response.result().statusCode());
-        service.setStatus(StatusCode.OK);
+        service.setStatus(StatusCode.UP);
       } else {
-        System.out.println(response.cause().getMessage());
-        service.setStatus(StatusCode.FAIL);
+        // TODO: Improve error handling
+        service.setStatus(StatusCode.DOWN);
       }
+
+      service.setLastChecked(new Date());
       vertx.eventBus().send(ServiceRegistry.ADDRESS, new ServiceMessage(Operation.PUT, id, service));
     });
   }
