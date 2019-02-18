@@ -5,8 +5,7 @@ mvn clean package
 mvn exec:java
 ```
 
-Use
-##
+## Use
 ```
 # List services
 curl localhost:9090/service
